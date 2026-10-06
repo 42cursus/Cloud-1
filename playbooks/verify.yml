@@ -1,0 +1,106 @@
+---
+- name: Verify the Cloud-1 deployment
+  hosts: cloud1
+  become: true
+  gather_facts: false
+  tasks:
+    - name: List running application services
+      ansible.builtin.command:
+        argv:
+          - docker
+          - compose
+          - --project-directory
+          - "{{ cloud1_project_dir }}"
+          - ps
+          - --services
+          - --status
+          - running
+      register: cloud1_running_services
+      changed_when: false
+
+    - name: Assert all long-running services are active
+      ansible.builtin.assert:
+        that:
+          - "'mariadb' in cloud1_running_services.stdout_lines"
+          - "'wordpress' in cloud1_running_services.stdout_lines"
+          - "'phpmyadmin' in cloud1_running_services.stdout_lines"
+          - "'nginx' in cloud1_running_services.stdout_lines"
+        fail_msg: One or more Cloud-1 services are not running.
+
+    - name: Check HTTP to HTTPS redirect
+      ansible.builtin.uri:
+        url: http://127.0.0.1/
+        headers:
+          Host: "{{ cloud1_domain }}"
+        follow_redirects: none
+        status_code: 301
+
+    - name: Check the WordPress HTTPS endpoint
+      ansible.builtin.uri:
+        url: https://127.0.0.1/
+        headers:
+          Host: "{{ cloud1_domain }}"
+        validate_certs: false
+        return_content: true
+        status_code: 200
+      register: cloud1_wordpress_response
+
+    - name: Assert the endpoint is WordPress
+      ansible.builtin.assert:
+        that:
+          - "'wp-content' in cloud1_wordpress_response.content"
+        fail_msg: The HTTPS endpoint did not return a WordPress page.
+
+    - name: Check phpMyAdmin is protected by basic authentication
+      ansible.builtin.uri:
+        url: https://127.0.0.1/phpmyadmin/
+        headers:
+          Host: "{{ cloud1_domain }}"
+        validate_certs: false
+        follow_redirects: none
+        status_code: 401
+
+    - name: Read the phpMyAdmin basic-auth password
+      ansible.builtin.slurp:
+        src: "{{ cloud1_secrets_dir }}/phpmyadmin_basic_auth"
+      register: cloud1_phpmyadmin_basic_auth
+      no_log: true
+
+    - name: Check the authenticated phpMyAdmin endpoint
+      ansible.builtin.uri:
+        url: https://127.0.0.1/phpmyadmin/
+        headers:
+          Host: "{{ cloud1_domain }}"
+        url_username: "{{ cloud1_phpmyadmin_basic_user }}"
+        url_password: "{{ cloud1_phpmyadmin_basic_auth.content | b64decode | trim }}"
+        force_basic_auth: true
+        validate_certs: false
+        status_code: 200
+      no_log: true
+
+    - name: Check that MariaDB has no published host port
+      ansible.builtin.command:
+        argv:
+          - docker
+          - inspect
+          - --format
+          - "{{ '{{' }}json .HostConfig.PortBindings{{ '}}' }}"
+          - cloud1-mariadb
+      register: cloud1_mariadb_bindings
+      changed_when: false
+
+    - name: Assert MariaDB has no published port bindings
+      ansible.builtin.assert:
+        that:
+          - cloud1_mariadb_bindings.stdout in ["{}", "null"]
+        fail_msg: "MariaDB exposes host ports: {{ cloud1_mariadb_bindings.stdout }}"
+
+    - name: Inspect persistent volumes
+      ansible.builtin.command:
+        argv:
+          - docker
+          - volume
+          - inspect
+          - cloud1_wordpress_data
+          - cloud1_mariadb_data
+      changed_when: false

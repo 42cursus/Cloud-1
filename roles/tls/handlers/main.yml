@@ -1,0 +1,15 @@
+---
+- name: Reload Cloud-1 Nginx
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - --project-directory
+      - "{{ cloud1_project_dir }}"
+      - exec
+      - -T
+      - nginx
+      - nginx
+      - -s
+      - reload
+  changed_when: true

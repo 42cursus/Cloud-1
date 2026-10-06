@@ -1,0 +1,53 @@
+---
+- name: Validate the managed operating system
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == "Debian"
+      - ansible_distribution in ["Ubuntu", "Debian"]
+    fail_msg: Cloud-1 supports Ubuntu and Debian hosts.
+
+- name: Install host prerequisites
+  ansible.builtin.apt:
+    name:
+      - apache2-utils
+      - ca-certificates
+      - curl
+      - gnupg
+      - openssl
+      - python3-cryptography
+      - ufw
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install Certbot for public TLS
+  ansible.builtin.apt:
+    name: certbot
+    state: present
+  when: cloud1_tls_mode == "letsencrypt"
+
+- name: Create application directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  loop:
+    - path: "{{ cloud1_project_dir }}"
+      mode: "0755"
+    - path: "{{ cloud1_secrets_dir }}"
+      mode: "0700"
+    - path: "{{ cloud1_tls_dir }}"
+      mode: "0700"
+    - path: "{{ cloud1_acme_dir }}"
+      mode: "0755"
+
+- name: Create the Certbot deploy-hook directory
+  ansible.builtin.file:
+    path: /etc/letsencrypt/renewal-hooks/deploy
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: cloud1_tls_mode == "letsencrypt"
