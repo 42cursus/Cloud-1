@@ -1,0 +1,36 @@
+---
+- name: Prepare Cloud-1 hosts
+  hosts: cloud1
+  become: true
+  gather_facts: true
+  roles:
+    - role: common
+      tags: [common]
+    - role: docker
+      tags: [docker]
+    - role: firewall
+      tags: [firewall]
+    - role: secrets
+      tags: [secrets]
+    - role: tls
+      vars:
+        tls_phase: bootstrap
+      tags: [tls]
+
+- name: Deploy the Cloud-1 application
+  hosts: cloud1
+  become: true
+  gather_facts: false
+  roles:
+    - role: application
+      tags: [application]
+
+- name: Configure public TLS
+  hosts: cloud1
+  become: true
+  gather_facts: false
+  roles:
+    - role: tls
+      vars:
+        tls_phase: public
+      tags: [tls]

@@ -1,0 +1,53 @@
+---
+- name: Create the bootstrap TLS private key
+  community.crypto.openssl_privatekey:
+    path: "{{ cloud1_tls_dir }}/bootstrap-privkey.pem"
+    owner: root
+    group: root
+    mode: "0600"
+    size: 3072
+
+- name: Create the bootstrap certificate request
+  community.crypto.openssl_csr:
+    path: "{{ cloud1_tls_dir }}/bootstrap.csr"
+    privatekey_path: "{{ cloud1_tls_dir }}/bootstrap-privkey.pem"
+    common_name: "{{ cloud1_domain }}"
+    subject_alt_name:
+      - >-
+        {{ 'IP:' if (cloud1_domain is match('^([0-9]{1,3}\.){3}[0-9]{1,3}$') or ':' in cloud1_domain) else 'DNS:' }}{{ cloud1_domain }}
+    owner: root
+    group: root
+    mode: "0600"
+  register: tls_bootstrap_csr
+
+- name: Create the bootstrap self-signed certificate
+  community.crypto.x509_certificate:
+    path: "{{ cloud1_tls_dir }}/bootstrap-fullchain.pem"
+    privatekey_path: "{{ cloud1_tls_dir }}/bootstrap-privkey.pem"
+    csr_path: "{{ cloud1_tls_dir }}/bootstrap.csr"
+    provider: selfsigned
+    selfsigned_not_after: "+3650d"
+    owner: root
+    group: root
+    mode: "0644"
+    force: "{{ tls_bootstrap_csr.changed }}"
+
+- name: Activate the self-signed private key
+  ansible.builtin.copy:
+    src: "{{ cloud1_tls_dir }}/bootstrap-privkey.pem"
+    dest: "{{ cloud1_tls_dir }}/privkey.pem"
+    remote_src: true
+    owner: root
+    group: root
+    mode: "0600"
+    force: "{{ cloud1_tls_mode == 'self_signed' }}"
+
+- name: Activate the self-signed certificate
+  ansible.builtin.copy:
+    src: "{{ cloud1_tls_dir }}/bootstrap-fullchain.pem"
+    dest: "{{ cloud1_tls_dir }}/fullchain.pem"
+    remote_src: true
+    owner: root
+    group: root
+    mode: "0644"
+    force: "{{ cloud1_tls_mode == 'self_signed' }}"

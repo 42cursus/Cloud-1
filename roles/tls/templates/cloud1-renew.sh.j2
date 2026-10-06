@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+
+install -m 0644 \
+  /etc/letsencrypt/live/{{ cloud1_domain }}/fullchain.pem \
+  {{ cloud1_tls_dir }}/fullchain.pem
+install -m 0600 \
+  /etc/letsencrypt/live/{{ cloud1_domain }}/privkey.pem \
+  {{ cloud1_tls_dir }}/privkey.pem
+
+if docker compose --project-directory {{ cloud1_project_dir }} ps --status running nginx \
+  --format '{{ "{{" }}.Service{{ "}}" }}' | grep -qx nginx; then
+  docker compose --project-directory {{ cloud1_project_dir }} exec -T nginx nginx -s reload
+fi

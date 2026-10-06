@@ -1,0 +1,25 @@
+---
+- name: Set the default incoming firewall policy
+  community.general.ufw:
+    direction: incoming
+    policy: deny
+
+- name: Set the default outgoing firewall policy
+  community.general.ufw:
+    direction: outgoing
+    policy: allow
+
+- name: Allow required public TCP ports
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop:
+    - "22"
+    - "80"
+    - "443"
+
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
+    logging: "on"
