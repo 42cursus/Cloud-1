@@ -1,15 +1,12 @@
 ---
 - name: Reload Cloud-1 Nginx
-  ansible.builtin.command:
-    argv:
-      - docker
-      - compose
-      - --project-directory
-      - "{{ cloud1_project_dir }}"
-      - exec
-      - -T
-      - nginx
-      - nginx
-      - -s
-      - reload
+  ansible.builtin.shell: |
+    set -o pipefail
+    if docker compose --project-directory {{ cloud1_project_dir }} ps --status running --services 2>/dev/null | grep -qx nginx; then
+      docker compose --project-directory {{ cloud1_project_dir }} exec -T nginx nginx -s reload
+    fi
+  args:
+    executable: /bin/bash
   changed_when: true
+
+
