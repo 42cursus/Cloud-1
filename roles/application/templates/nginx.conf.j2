@@ -1,6 +1,8 @@
 server {
     listen 80 default_server;
+    {% if cloud1_enable_ipv6 %}
     listen [::]:80 default_server;
+    {% endif %}
     server_name {{ cloud1_domain }};
 
     location /.well-known/acme-challenge/ {
@@ -14,7 +16,9 @@ server {
 
 server {
     listen 443 ssl default_server;
+{% if cloud1_enable_ipv6 %}
     listen [::]:443 ssl default_server;
+{% endif %}
     server_name {{ cloud1_domain }};
 
     ssl_certificate /etc/nginx/tls/fullchain.pem;
