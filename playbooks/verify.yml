@@ -78,22 +78,31 @@
         status_code: 200
       no_log: true
 
-    - name: Check that MariaDB has no published host port
+    - name: Inspect private service host port bindings
       ansible.builtin.command:
         argv:
           - docker
           - inspect
           - --format
           - "{{ '{{' }}json .HostConfig.PortBindings{{ '}}' }}"
-          - cloud1-mariadb
-      register: cloud1_mariadb_bindings
+          - "cloud1-{{ item }}"
+      loop:
+        - mariadb
+        - wordpress
+        - phpmyadmin
+      register: cloud1_private_service_bindings
       changed_when: false
 
-    - name: Assert MariaDB has no published port bindings
+    - name: Assert private services have no published port bindings
       ansible.builtin.assert:
         that:
-          - cloud1_mariadb_bindings.stdout in ["{}", "null"]
-        fail_msg: "MariaDB exposes host ports: {{ cloud1_mariadb_bindings.stdout }}"
+          - item.stdout in ["{}", "null"]
+        fail_msg: >-
+          {{ item.item }} exposes host ports: {{ item.stdout }}
+        quiet: true
+      loop: "{{ cloud1_private_service_bindings.results }}"
+      loop_control:
+        label: "{{ item.item }}"
 
     - name: Inspect Nginx host port bindings
       ansible.builtin.command:

@@ -17,7 +17,9 @@ secrets, TLS, and a four-service Docker Compose application.
 - `docker-compose.yml` is a normal static project file. Ansible only renders
   the small host-specific `.env` file installed beside it on the server.
 
-See [docs/architecture.md](docs/architecture.md) for the complete design.
+See [docs/architecture.md](docs/architecture.md) for the complete design and
+[docs/evaluation-guide.md](docs/evaluation-guide.md) for the requirements
+matrix and defense runbook.
 
 ## Controller prerequisites
 
