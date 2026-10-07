@@ -6,7 +6,7 @@ secrets, TLS, and a four-service Docker Compose application.
 
 ## Architecture
 
-- Nginx is the only public application container and publishes TCP 80/443.
+- Nginx is the only public application container and publishes IPv4 TCP 80/443.
 - WordPress runs separately with PHP-FPM.
 - phpMyAdmin is available at `/phpmyadmin/` behind HTTP Basic Authentication.
 - MariaDB is attached only to an internal Docker network and has no host port.
@@ -14,6 +14,8 @@ secrets, TLS, and a four-service Docker Compose application.
 - Docker and all long-running containers restart automatically after reboot.
 - Runtime passwords are generated once on each managed server and never
   committed to Git.
+- `docker-compose.yml` is a normal static project file. Ansible only renders
+  the small host-specific `.env` file installed beside it on the server.
 
 See [docs/architecture.md](docs/architecture.md) for the complete design.
 
