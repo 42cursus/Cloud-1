@@ -41,6 +41,7 @@
     group: root
     mode: "0600"
     force: "{{ cloud1_tls_mode == 'self_signed' }}"
+  notify: Reload Cloud-1 Nginx
 
 - name: Activate the self-signed certificate
   ansible.builtin.copy:
@@ -51,3 +52,4 @@
     group: root
     mode: "0644"
     force: "{{ cloud1_tls_mode == 'self_signed' }}"
+  notify: Reload Cloud-1 Nginx
