@@ -22,6 +22,31 @@ cache validity and IPv6 DNS queries disabled. The WordPress FastCGI and
 phpMyAdmin HTTP upstreams use shared zones and `resolve`, so Nginx follows a
 service when Docker recreates its container with a different address.
 
+## SSH honeypot concept
+
+A possible production hardening design would move the real SSH daemon to TCP
+2222 and place an isolated SSH honeypot on TCP 22. The administrative endpoint
+would remain key-only and could be restricted to trusted source addresses,
+while the honeypot would record unauthenticated scanning and credential attacks.
+The honeypot must not receive host credentials, privileged container access,
+the Docker socket, or application volumes.
+
+This design is intentionally **not implemented** for Cloud-1:
+
+- The subject permits only public TCP ports 22, 80 and 443. Opening 2222 would
+  violate that requirement.
+- The evaluator must connect to the real server as root through the expected
+  provider access. Presenting a honeypot on port 22 could obstruct or mislead
+  the evaluation and may stop the defense.
+- Changing the SSH endpoint during automated provisioning creates an avoidable
+  lockout risk on short-lived evaluation instances.
+
+If this repository is adapted for a non-evaluation environment, the design
+should be a separate, explicitly enabled hardening profile. It must open and
+test port 2222 before changing `sshd`, verify a new administrative connection
+before closing the old endpoint, and deploy the honeypot with strict isolation.
+It must never alter the default evaluation deployment.
+
 ## Compose configuration
 
 The repository contains the complete static `docker-compose.yml`. Ansible
@@ -42,11 +67,11 @@ not exposed as a normal Make target.
 The `secrets` role generates passwords directly on each managed host. It uses
 create-if-missing operations, so an ordinary Ansible rerun cannot rotate
 credentials. Compose mounts the files as secrets; password values do not appear
-in the repository, static Compose file, or generated environment file. The secrets directory is root-only
-(`0700`). WordPress-readable files use mode `0644` because the official Debian
-and Alpine images use different numeric `www-data` IDs; they remain inaccessible
-to host users through the root-only parent directory and are mounted read-only
-inside their containers.
+in the repository, static Compose file, or generated environment file. The
+secrets directory is root-only (`0700`). WordPress-readable files use mode
+`0644` because the official Debian and Alpine images use different numeric
+`www-data` IDs; they remain inaccessible to host users through the root-only
+parent directory and are mounted read-only inside their containers.
 
 ## TLS
 
