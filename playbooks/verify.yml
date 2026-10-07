@@ -135,6 +135,20 @@
           - "'listen [::]' not in cloud1_nginx_configuration.stderr"
         fail_msg: The active Nginx configuration contains an IPv6 listener.
 
+    - name: Assert Nginx dynamically resolves container upstreams
+      ansible.builtin.assert:
+        that:
+          - >-
+            'resolver 127.0.0.11 valid=15s ipv6=off;'
+            in (cloud1_nginx_configuration.stdout ~ cloud1_nginx_configuration.stderr)
+          - >-
+            'server wordpress:9000 resolve;'
+            in (cloud1_nginx_configuration.stdout ~ cloud1_nginx_configuration.stderr)
+          - >-
+            'server phpmyadmin:80 resolve;'
+            in (cloud1_nginx_configuration.stdout ~ cloud1_nginx_configuration.stderr)
+        fail_msg: Nginx is not configured for dynamic Docker upstream resolution.
+
     - name: Inspect persistent volumes
       ansible.builtin.command:
         argv:
