@@ -17,6 +17,11 @@ frontend and database networks. MariaDB joins only the internal database
 network and does not publish port 3306. The host firewall and Nginx ingress are
 IPv4-only; the deployment does not create IPv6 listeners or UFW rules.
 
+Nginx uses Docker's embedded DNS resolver at `127.0.0.11`, with a 15-second
+cache validity and IPv6 DNS queries disabled. The WordPress FastCGI and
+phpMyAdmin HTTP upstreams use shared zones and `resolve`, so Nginx follows a
+service when Docker recreates its container with a different address.
+
 ## Compose configuration
 
 The repository contains the complete static `docker-compose.yml`. Ansible
