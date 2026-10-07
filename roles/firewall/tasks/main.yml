@@ -1,4 +1,14 @@
 ---
+- name: Disable IPv6 firewall management
+  ansible.builtin.lineinfile:
+    path: /etc/default/ufw
+    regexp: "^IPV6="
+    line: IPV6=no
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload UFW
+
 - name: Set the default incoming firewall policy
   community.general.ufw:
     direction: incoming

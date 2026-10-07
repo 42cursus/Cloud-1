@@ -4,7 +4,7 @@
 
 ```text
 Internet
-  -> UFW: TCP 22, 80 and 443 only
+  -> UFW: IPv4 TCP 22, 80 and 443 only
   -> Nginx
        -> WordPress PHP-FPM
        -> phpMyAdmin
@@ -14,7 +14,16 @@ Internet
 
 Nginx joins only the frontend network. WordPress and phpMyAdmin join both the
 frontend and database networks. MariaDB joins only the internal database
-network and does not publish port 3306.
+network and does not publish port 3306. The host firewall and Nginx ingress are
+IPv4-only; the deployment does not create IPv6 listeners or UFW rules.
+
+## Compose configuration
+
+The repository contains the complete static `docker-compose.yml`. Ansible
+copies it unchanged to `/opt/cloud-1` and renders only `/opt/cloud-1/.env`,
+which supplies the selected image tags, hostname, application metadata, and
+host paths. This keeps the orchestration directly readable while retaining
+inventory-specific deployment values.
 
 ## Persistence
 
@@ -28,7 +37,7 @@ not exposed as a normal Make target.
 The `secrets` role generates passwords directly on each managed host. It uses
 create-if-missing operations, so an ordinary Ansible rerun cannot rotate
 credentials. Compose mounts the files as secrets; password values do not appear
-in the repository or rendered Compose file. The secrets directory is root-only
+in the repository, static Compose file, or generated environment file. The secrets directory is root-only
 (`0700`). WordPress-readable files use mode `0644` because the official Debian
 and Alpine images use different numeric `www-data` IDs; they remain inaccessible
 to host users through the root-only parent directory and are mounted read-only

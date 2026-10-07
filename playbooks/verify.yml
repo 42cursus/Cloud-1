@@ -95,6 +95,46 @@
           - cloud1_mariadb_bindings.stdout in ["{}", "null"]
         fail_msg: "MariaDB exposes host ports: {{ cloud1_mariadb_bindings.stdout }}"
 
+    - name: Inspect Nginx host port bindings
+      ansible.builtin.command:
+        argv:
+          - docker
+          - inspect
+          - --format
+          - "{{ '{{' }}json .HostConfig.PortBindings{{ '}}' }}"
+          - cloud1-nginx
+      register: cloud1_nginx_bindings
+      changed_when: false
+
+    - name: Assert Nginx publishes IPv4 ports only
+      ansible.builtin.assert:
+        that:
+          - >-
+            (cloud1_nginx_bindings.stdout | from_json)['80/tcp']
+            | map(attribute='HostIp') | list == ['0.0.0.0']
+          - >-
+            (cloud1_nginx_bindings.stdout | from_json)['443/tcp']
+            | map(attribute='HostIp') | list == ['0.0.0.0']
+        fail_msg: "Unexpected Nginx port bindings: {{ cloud1_nginx_bindings.stdout }}"
+
+    - name: Inspect the active Nginx configuration
+      ansible.builtin.command:
+        argv:
+          - docker
+          - exec
+          - cloud1-nginx
+          - nginx
+          - -T
+      register: cloud1_nginx_configuration
+      changed_when: false
+
+    - name: Assert Nginx has no IPv6 listeners
+      ansible.builtin.assert:
+        that:
+          - "'listen [::]' not in cloud1_nginx_configuration.stdout"
+          - "'listen [::]' not in cloud1_nginx_configuration.stderr"
+        fail_msg: The active Nginx configuration contains an IPv6 listener.
+
     - name: Inspect persistent volumes
       ansible.builtin.command:
         argv:

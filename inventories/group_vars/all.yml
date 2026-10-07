@@ -1,5 +1,4 @@
 ---
-cloud1_project_name: cloud1
 cloud1_project_dir: /opt/cloud-1
 cloud1_secrets_dir: /etc/cloud-1/secrets
 cloud1_tls_dir: /etc/cloud-1/tls
@@ -9,7 +8,6 @@ cloud1_domain: "{{ ansible_host | default(inventory_hostname) }}"
 cloud1_url: "https://{{ cloud1_domain }}"
 cloud1_tls_mode: self_signed
 cloud1_letsencrypt_email: ""
-cloud1_enable_ipv6: true
 
 cloud1_database_name: wordpress
 cloud1_database_user: wordpress
