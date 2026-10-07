@@ -15,7 +15,7 @@
     port: "{{ item }}"
     proto: tcp
   loop:
-    - "22"
+    - "{{ ansible_port | default(22) }}"
     - "80"
     - "443"
 
