@@ -25,6 +25,7 @@
     owner: root
     group: root
     mode: "0644"
+  notify: Reload Cloud-1 Nginx
 
 - name: Install the WordPress initialization script
   ansible.builtin.template:

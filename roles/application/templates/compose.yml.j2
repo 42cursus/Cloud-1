@@ -86,7 +86,7 @@ services:
       - "443:443"
     volumes:
       - wordpress_data:/var/www/html:ro
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx:/etc/nginx/conf.d:ro
       - {{ cloud1_tls_dir }}:/etc/nginx/tls:ro
       - {{ cloud1_secrets_dir }}/phpmyadmin.htpasswd:/etc/nginx/phpmyadmin.htpasswd:ro
       - {{ cloud1_acme_dir }}:/var/www/certbot:ro
