@@ -1,0 +1,20 @@
+ Cloud-1 x Scaleway
+	Do you want a part of clouds ?
+	Hello, Bakyt.
+
+Your team just started working on cloud-1 or you scheduled an evaluation for it.
+
+For this project you can use any cloud provider you want, but you'll need to assume the cost of what you need with the provider you choose, or thanks to Scaleway you can work on their real cloud instances for free.
+
+For that, you need to provide a valid ssh key on your intranet profiles and click on the link below, we'll deploy what you need for this project, for you and your team. You'll receive a mail when these resources are ready. Don't forget that these resources are for educational purpose only and are going to be deleted when:
+
+    Your team set the project as finished.
+    The evaluator marks your team.
+    If this is an evaluation it will be deleted after one hour after the start of the evaluation.
+    If this is not an evaluation it will be deleted after one month.
+
+
+
+Click here ONLY if you need these resources.
+
+Sincerely,
