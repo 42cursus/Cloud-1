@@ -1,5 +1,5 @@
 VENV := .venv
-PYTHON := python3
+PYTHON ?= python3
 PIP := $(VENV)/bin/pip
 ANSIBLE := $(VENV)/bin/ansible
 ANSIBLE_PLAYBOOK := $(VENV)/bin/ansible-playbook
@@ -24,7 +24,9 @@ help:
 		'make idempotency   Converge twice, then run verification'
 
 $(VENV)/bin/ansible-playbook: requirements-controller.txt requirements.yml
+	$(PYTHON) -c 'import sys; sys.exit("Cloud-1 requires Python 3.12-3.14 for Ansible Core 2.20.") if not ((3, 12) <= sys.version_info[:2] < (3, 15)) else None'
 	$(PYTHON) -m venv $(VENV)
+	$(VENV)/bin/python -c 'import sys; sys.exit("Existing .venv does not use Python 3.12-3.14; remove it and rerun make install.") if not ((3, 12) <= sys.version_info[:2] < (3, 15)) else None'
 	$(PIP) install --upgrade pip
 	$(PIP) install -r requirements-controller.txt
 	$(GALAXY) collection install -r requirements.yml

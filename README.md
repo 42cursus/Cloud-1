@@ -23,7 +23,7 @@ matrix and defense runbook.
 
 ## Controller prerequisites
 
-- Python 3 with the `venv` module
+- Python 3.12 through 3.14 with the `venv` module
 - SSH access to the target
 - The target's SSH host key verified in `known_hosts`
 
