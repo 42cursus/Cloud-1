@@ -1,4 +1,8 @@
-# Cloud-1
+This project has been created as part of the 42 curriculum by ufitzhug, abelov.
+
+## Description
+
+**Cloud-1**
 
 Automated deployment of a persistent WordPress stack to fresh Ubuntu or Debian
 servers. Ansible installs and configures Docker, the host firewall, runtime
