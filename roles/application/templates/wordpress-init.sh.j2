@@ -1,0 +1,35 @@
+#!/bin/sh
+set -eu
+
+cd /var/www/html
+
+attempt=0
+until [ -f wp-config.php ] && wp db check --allow-root >/dev/null 2>&1; do
+    attempt=$((attempt + 1))
+    if [ "$attempt" -ge 60 ]; then
+        echo "WordPress files or database did not become ready" >&2
+        exit 1
+    fi
+    sleep 2
+done
+
+if wp core is-installed --allow-root >/dev/null 2>&1; then
+    echo "Cloud-1 WordPress is already initialized"
+    exit 0
+fi
+
+admin_password="$(cat /run/secrets/wordpress_admin_password)"
+
+wp core install \
+    --allow-root \
+    --url="$WORDPRESS_URL" \
+    --title="$WORDPRESS_TITLE" \
+    --admin_user="$WORDPRESS_ADMIN_USER" \
+    --admin_password="$admin_password" \
+    --admin_email="$WORDPRESS_ADMIN_EMAIL" \
+    --skip-email
+
+wp option update permalink_structure '/%postname%/' --allow-root
+wp rewrite flush --hard --allow-root
+
+echo "CLOUD1_WORDPRESS_INITIALIZED"

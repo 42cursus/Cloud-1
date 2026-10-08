@@ -1,0 +1,13 @@
+---
+all:
+  children:
+    cloud1:
+      hosts:
+        cloud1-evaluation:
+          ansible_host: 203.0.113.10
+          ansible_user: root
+          cloud1_domain: cloud1.example.org
+          cloud1_tls_mode: self_signed
+          # For a real public hostname:
+          # cloud1_tls_mode: letsencrypt
+          # cloud1_letsencrypt_email: student@example.com

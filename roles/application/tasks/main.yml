@@ -1,0 +1,108 @@
+---
+- name: Create application configuration directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ cloud1_project_dir }}/nginx"
+    - "{{ cloud1_project_dir }}/scripts"
+
+- name: Remove the legacy generated Compose file
+  ansible.builtin.file:
+    path: "{{ cloud1_project_dir }}/compose.yml"
+    state: absent
+
+- name: Install the Compose deployment
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../docker-compose.yml"
+    dest: "{{ cloud1_project_dir }}/docker-compose.yml"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Render the Compose environment
+  ansible.builtin.template:
+    src: compose.env.j2
+    dest: "{{ cloud1_project_dir }}/.env"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Render the Nginx configuration
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: "{{ cloud1_project_dir }}/nginx/default.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload Cloud-1 Nginx
+
+- name: Install the WordPress initialization script
+  ansible.builtin.template:
+    src: wordpress-init.sh.j2
+    dest: "{{ cloud1_project_dir }}/scripts/wordpress-init.sh"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Validate the rendered Compose configuration
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - --project-directory
+      - "{{ cloud1_project_dir }}"
+      - config
+      - --quiet
+  changed_when: false
+
+- name: Converge the Cloud-1 stack
+  community.docker.docker_compose_v2:
+    project_src: "{{ cloud1_project_dir }}"
+    state: present
+    pull: missing
+    remove_orphans: true
+
+- name: Wait for MariaDB to become healthy
+  ansible.builtin.command:
+    argv:
+      - docker
+      - inspect
+      - --format
+      - "{{ '{{' }}.State.Health.Status{{ '}}' }}"
+      - cloud1-mariadb
+  register: application_mariadb_health
+  changed_when: false
+  retries: 30
+  delay: 3
+  until: application_mariadb_health.stdout == "healthy"
+
+- name: Initialize WordPress
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - --project-directory
+      - "{{ cloud1_project_dir }}"
+      - --profile
+      - tools
+      - run
+      - --rm
+      - wordpress-cli
+  register: application_wordpress_init
+  changed_when: "'CLOUD1_WORDPRESS_INITIALIZED' in application_wordpress_init.stdout"
+
+- name: Wait for the HTTPS endpoint
+  ansible.builtin.uri:
+    url: https://127.0.0.1/
+    headers:
+      Host: "{{ cloud1_domain }}"
+    validate_certs: false
+    status_code: 200
+  register: application_https
+  retries: 20
+  delay: 3
+  until: application_https.status == 200

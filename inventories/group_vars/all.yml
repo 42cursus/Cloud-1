@@ -1,0 +1,27 @@
+---
+cloud1_project_dir: /opt/cloud-1
+cloud1_secrets_dir: /etc/cloud-1/secrets
+cloud1_tls_dir: /etc/cloud-1/tls
+cloud1_acme_dir: /var/lib/cloud-1/acme
+
+cloud1_domain: "{{ ansible_host | default(inventory_hostname) }}"
+cloud1_url: "https://{{ cloud1_domain }}"
+cloud1_tls_mode: self_signed
+cloud1_letsencrypt_email: ""
+
+cloud1_database_name: wordpress
+cloud1_database_user: wordpress
+cloud1_wordpress_title: Cloud-1
+cloud1_wordpress_admin_user: cloud1_admin
+cloud1_wordpress_admin_email: admin@example.invalid
+cloud1_phpmyadmin_basic_user: cloud1
+
+cloud1_nginx_image: docker.io/library/nginx:1.28-alpine
+cloud1_mariadb_image: docker.io/library/mariadb:11.8
+cloud1_wordpress_image: docker.io/library/wordpress:6.8-php8.3-fpm-alpine
+cloud1_wordpress_cli_image: docker.io/library/wordpress:cli-php8.3
+cloud1_phpmyadmin_image: docker.io/library/phpmyadmin:5.2-apache
+
+cloud1_docker_architectures:
+  x86_64: amd64
+  aarch64: arm64

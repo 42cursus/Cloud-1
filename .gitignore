@@ -1,1 +1,15 @@
 
+.idea/
+.venv/
+build/
+inventories/hosts.yml
+vault_pwd
+*.retry
+*.pyc
+__pycache__/
+.ansible/
+.cache/
+.env
+sslkeylog.log
+Cloud Subject.pdf
+*.DS_Store
